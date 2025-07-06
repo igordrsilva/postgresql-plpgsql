@@ -1,55 +1,47 @@
-CREATE OR REPLACE FUNCTION salario_ok (id_instrutor INTEGER) RETURNS VARCHAR AS $$
-    DECLARE
-        instrutor instrutor;
-    BEGIN 
-        SELECT * FROM instrutor WHERE id = id_instrutor INTO instrutor;
+-- Em casos onde temos muitas condições para validar, usamos o case when
+drop function salario_ok;
+create or replace function salario_ok(id_instrutor integer) returns varchar as $$
+	declare
+		instrutor instrutor;
+	begin
+		select * from instrutor where id = id_instrutor into instrutor;
+		case -- Quando o salário for igual a condição, retorna o seu determinado valor
+			when instrutor.salario = 100 then
+				return 'Salário muito baixo!';
+			when instrutor.salario = 200 then
+				return 'Salário baixo!';
+			when instrutor.salario = 300 then
+				return 'Salário ok!';
+			else
+				return 'Salário ótimo!';
+		end case;
+	end;
+$$ language plpgsql;
 
-        -- se o salário do instrutor for maior do que 300 reais, está ok. Se for 300 reais, então pode aumentar. Caso contrário, o salário está defasado.
-        /*IF instrutor.salario > 300 THEN
-            RETURN 'Salário está ok.';
-        ELSEIF instrutor.salario = 300 THE
-            RETURN 'Salário pode aumentar';
-        ELSE
-            RETURN 'Salário está defasado';     
-        END IF;*/
-        CASE
-            WHEN instrutor.salario = 100 THEN
-                RETURN 'Salário muito baixo';
-            WHEN instrutor.salario = 200 THEN
-                RETURN 'Salário baixo';
-            WHEN instrutor.salario = 300 THEN
-                RETURN 'Salário ok';
-            ELSE
-                RETURN 'Salário ótimo';
-        END CASE;
-    END;
-$$ LANGUAGE plpgsql;
+select nome, salario_ok(id) from instrutor;
 
-SELECT nome, salario_ok(instrutor.id) FROM instrutor;
+-- Aqui já otimizamos o nosso código, substituindo o if/else
+-- Mas ainda repetimos alguns trechos, como "instrutor.salario = X"
+-- Para melhorar ainda mais, podemos fazer
+drop function salario_ok;
+create or replace function salario_ok(id_instrutor integer) returns varchar as $$
+	declare
+		instrutor instrutor;
+	begin
+		select * from instrutor where id = id_instrutor into instrutor;
+		-- Colocamos o valor de validação uma vez em case e em cada when as possibilidades
+		case instrutor.salario
+			when 100 then
+				return 'Salário muito baixo!';
+			when 200 then
+				return 'Salário baixo!';
+			when 300 then
+				return 'Salário ok!';
+			else
+				return 'Salário ótimo!';
+		end case;
+	end;
+$$ language plpgsql;
+-- Dessa forma, facilitamos ainda mais a leitura do código
 
-CREATE OR REPLACE FUNCTION salario_ok (id_instrutor INTEGER) RETURNS VARCHAR AS $$
-    DECLARE
-        instrutor instrutor;
-    BEGIN 
-        SELECT * FROM instrutor WHERE id = id_instrutor INTO instrutor;
-
-        -- se o salário do instrutor for maior do que 300 reais, está ok. Se for 300 reais, então pode aumentar. Caso contrário, o salário está defasado.
-        /*IF instrutor.salario > 300 THEN
-            RETURN 'Salário está ok.';
-        ELSEIF instrutor.salario = 300 THE
-            RETURN 'Salário pode aumentar';
-        ELSE
-            RETURN 'Salário está defasado';     
-        END IF;*/
-        CASE
-            WHEN 100 THEN
-                RETURN 'Salário muito baixo';
-            WHEN 200 THEN
-                RETURN 'Salário baixo';
-            WHEN 300 THEN
-                RETURN 'Salário ok';
-            ELSE
-                RETURN 'Salário ótimo';
-        END CASE;
-    END;
-$$ LANGUAGE plpgsql;
+select nome, salario_ok(id) from instrutor;

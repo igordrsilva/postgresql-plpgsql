@@ -1,38 +1,18 @@
-DROP FUNCTION salario_ok;
-CREATE OR REPLACE FUNCTION salario_ok (id_instrutor INTEGER) RETURNS VARCHAR AS $$
-    DECLARE
-        instrutor instrutor;
-    BEGIN 
-        SELECT * FROM instrutor WHERE id = id_instrutor INTO instrutor;
+-- Em casos onde temos mais de uma condição, podemos usar o elseif para criar uma validação a mais
+create or replace function salario_ok(id_instrutor integer) returns varchar as $$
+	declare
+		instrutor instrutor;
+	begin
+		select * from instrutor where id = id_instrutor into instrutor;
+		-- Se for maior que R$300,00, está OK! Se for igual a R$300,00 pode aumentar. Caso contrário, o salário está defasado!
+		if instrutor.salario > 300 then 
+			return 'Salário está ok!';
+		elseif instrutor.salario = 300 then
+			return 'Pode aumentar!';
+		else
+			return 'Salário defasado!';
+		end if;
+	end;
+$$ language plpgsql;
 
-        -- se o salário do instrutor for maior do que 300 reais, está ok. Se for 300 reais, então pode aumentar. Caso contrário, o salário está defasado.
-        IF instrutor.salario > 300 THEN
-            RETURN 'Salário está ok.';
-        ELSE 
-            IF instrutor.salario = 300 THE
-                RETURN 'Salário pode aumentar';
-            ELSE
-                RETURN 'Salário está defasado';     
-        END IF;
-    END;
-$$ LANGUAGE plpgsql;
-
-
-SELECT nome, salario_ok(instrutor.id) FROM instrutor;
-
-CREATE OR REPLACE FUNCTION salario_ok (id_instrutor INTEGER) RETURNS VARCHAR AS $$
-    DECLARE
-        instrutor instrutor;
-    BEGIN 
-        SELECT * FROM instrutor WHERE id = id_instrutor INTO instrutor;
-
-        -- se o salário do instrutor for maior do que 300 reais, está ok. Se for 300 reais, então pode aumentar. Caso contrário, o salário está defasado.
-        IF instrutor.salario > 300 THEN
-            RETURN 'Salário está ok.';
-        ELSEIF instrutor.salario = 300 THE
-            RETURN 'Salário pode aumentar';
-        ELSE
-            RETURN 'Salário está defasado';     
-        END IF;
-    END;
-$$ LANGUAGE plpgsql;
+select nome, salario_ok(id) from instrutor;
